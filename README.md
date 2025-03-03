@@ -60,7 +60,9 @@ When new expression is recieved, it is processed as follows:
 5. The AST gets turned into a list of tasks, with a tree of dependencies
 
 Upon the get expressions call, all parent tasks get returned
+vpno
 Upon the /internal/task call, a non-sent, non-ready task is sent to the agent
+
 When the result is recieved, it is marked done and another task is now ready to be sent
 
 All expression IDs are task IDs, but only the parent task IDs are expression IDs. This simplifies the process.
@@ -146,5 +148,7 @@ Response:
 ## Special Thanks
 
 [C418 - Aria Math - The Dominator Synthwave Remix](https://www.youtube.com/watch?v=yiS0DPekSDQ)
+
 [Undertale Yellow - END OF THE LINE_ - SayMaxWell Remix](https://www.youtube.com/watch?v=c54WQTqlFGU)
+
 [John Williams - Setting the Trap - d.notive Synth Remix](https://www.youtube.com/watch?v=3zy-XqRXH1g)

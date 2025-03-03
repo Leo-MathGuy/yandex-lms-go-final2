@@ -39,7 +39,7 @@ func InitState() {
 }
 
 func AddExpr(expr string) (int, error) {
-	s1, err := Step1(expr)
+	s1, err := Validate(expr)
 
 	if err != nil {
 		return -1, fmt.Errorf("error in phase 1: " + err.Error())
@@ -48,68 +48,23 @@ func AddExpr(expr string) (int, error) {
 		return -1, fmt.Errorf("error in phase 1")
 	}
 
-	s2, err := Step2(s1)
+	s2, err := Tokenize(s1)
 
 	if err != nil {
 		return -1, fmt.Errorf("error in phase 2: " + err.Error())
 	}
-	astTree := parseExpression(s2)
+	astTree := ParseExpression(s2)
 
 	taskState.Lock()
 	defer taskState.Unlock()
 
-	task, err := generateTasksFromAST(astTree, true)
+	task, err := GenerateTasksFromAST(astTree, true)
 
 	if err != nil {
 		return 0, err
 	}
 
 	return task, nil
-}
-
-func generateTasksFromAST(node *ASTNode, parent bool) (int, error) {
-	if node == nil {
-		return 0, fmt.Errorf("empty node")
-	}
-
-	if node.Value != nil {
-		taskID := taskState.tasknum
-		taskState.tasknum++
-
-		taskState.tasks[taskID] = &Task{
-			ID:      taskID,
-			LeftVal: node.Value,
-			parent:  parent,
-			Done:    true,
-			Result:  node.Value,
-			Sent:    false,
-		}
-		return taskID, nil
-	}
-
-	leftID, err := generateTasksFromAST(node.Left, false)
-	if err != nil {
-		return 0, err
-	}
-	rightID, err := generateTasksFromAST(node.Right, false)
-	if err != nil {
-		return 0, err
-	}
-
-	taskID := taskState.tasknum
-	taskState.tasknum++
-
-	taskState.tasks[taskID] = &Task{
-		ID:       taskID,
-		Operator: node.Operator,
-		LeftID:   &leftID,
-		RightID:  &rightID,
-		parent:   parent,
-		Done:     false,
-		Sent:     false,
-	}
-
-	return taskID, nil
 }
 
 func GetLastTaskId() int {

@@ -19,15 +19,16 @@ class Expr:
 
 
 def sendExpr(expression: str) -> Tuple[int, int]:
-    x = requests.post(API + "calculate", json={"expression": expression})
+    x = requests.post(API + "calculate/", json={"expression": expression})
     if x.status_code == HTTPStatus.CREATED:
         return (x.json()["id"], x.status_code)
     else:
+        print(x.content)
         return (-1, x.status_code)
 
 
 def getExprs() -> Tuple[List[Expr], int]:
-    x = requests.get(API + "expressions")
+    x = requests.get(API + "expressions/")
 
     if x.status_code == HTTPStatus.OK:
         res = x.json()["expressions"]
@@ -73,7 +74,7 @@ def do_op():
                     print(f"Created, id: {result[0]}")
                     return
                 case HTTPStatus.UNPROCESSABLE_ENTITY:
-                    print("Bad expression")
+                    print("Bad expression: ")
                     return
                 case HTTPStatus.INTERNAL_SERVER_ERROR:
                     print("Internal Server Error")

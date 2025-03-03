@@ -57,7 +57,7 @@ func SymbolType(x rune) int {
 }
 
 // // Phase 1: Validation
-func Step1(expr string) ([]string, error) {
+func Validate(expr string) ([]string, error) {
 	if len(expr) == 0 {
 		return []string{}, errors.New("empty expression")
 	}
@@ -197,7 +197,7 @@ func Step1(expr string) ([]string, error) {
 }
 
 // // Phase 2: Tokenization
-func Step2(step1 []string) ([][]float64, error) {
+func Tokenize(step1 []string) ([][]float64, error) {
 	fexpr := make([][]float64, 0)
 
 	for _, v := range step1 {
@@ -225,7 +225,11 @@ type ASTNode struct {
 	Right    *ASTNode
 }
 
-func parseExpression(expr [][]float64) *ASTNode {
+func floatPtr(f float64) *float64 {
+	return &f
+}
+
+func ParseExpression(expr [][]float64) *ASTNode {
 	real := make([][]float64, 0)
 	skip := false
 	for i, v := range expr {
@@ -343,12 +347,8 @@ func parseFactor(factor [][]float64) *ASTNode {
 		if len(factor) == 0 {
 			panic("no")
 		}
-		return parseExpression(factor)
+		return ParseExpression(factor)
 	}
 
 	panic("Oh nou")
-}
-
-func floatPtr(f float64) *float64 {
-	return &f
 }

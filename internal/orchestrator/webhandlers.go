@@ -16,6 +16,7 @@ type Request struct {
 func HandleCalculate(w http.ResponseWriter, r *http.Request) {
 	var request Request
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		fmt.Fprintln(os.Stderr, "Error decoding: "+err.Error())
 		http.Error(w, "Unprocessable Content", http.StatusUnprocessableEntity)
 		return
 	}
@@ -31,63 +32,12 @@ func HandleCalculate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleTask(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		HandleGetTask(w, r)
-		return
-	case "POST":
-		HandleRecieveTask(w, r)
-		return
-	}
-}
-
-func HandleGetTask(w http.ResponseWriter, r *http.Request) {
-	taskState.Lock()
-	defer taskState.Unlock()
-
-	for _, task := range taskState.tasks {
-		if !(task.Done || task.Sent) {
-			leftReady := (task.LeftID == nil || (taskState.tasks[*task.LeftID].Done))
-			rightReady := (task.RightID == nil || (taskState.tasks[*task.RightID].Done))
-
-			if leftReady && rightReady {
-				taskJSON := map[string]interface{}{
-					"task": map[string]interface{}{
-						"id":             task.ID,
-						"arg1":           getTaskValue(task.LeftID, task.LeftVal),
-						"arg2":           getTaskValue(task.RightID, task.RightVal),
-						"operation":      task.Operator,
-						"operation_time": opTime(task.Operator),
-					},
-				}
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(taskJSON)
-				task.Sent = true
-				return
-			}
-		}
-	}
-
-	http.Error(w, "No available tasks", http.StatusNotFound)
-}
-
-func HandleRecieveTask(w http.ResponseWriter, r *http.Request) {
-	var resultData struct {
-		ID     int     `json:"id"`
-		Result float64 `json:"result"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&resultData); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusUnprocessableEntity)
-		return
-	}
-
-	processTaskResult(resultData.ID, resultData.Result, w)
-	w.WriteHeader(http.StatusOK)
-}
-
 func HandleExprs(w http.ResponseWriter, r *http.Request) {
+	if len(r.URL.Path[len("/api/v1/expressions/"):]) != 0 {
+		HandleExpr(w, r)
+		return
+	}
+
 	taskState.RLock()
 	defer taskState.RUnlock()
 
@@ -145,6 +95,62 @@ func HandleExpr(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func HandleTask(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		HandleGetTask(w, r)
+		return
+	case "POST":
+		HandleRecieveTask(w, r)
+		return
+	}
+}
+
+func HandleGetTask(w http.ResponseWriter, r *http.Request) {
+	taskState.Lock()
+	defer taskState.Unlock()
+
+	for _, task := range taskState.tasks {
+		if !(task.Done || task.Sent) {
+			leftReady := (task.LeftID == nil || (taskState.tasks[*task.LeftID].Done))
+			rightReady := (task.RightID == nil || (taskState.tasks[*task.RightID].Done))
+
+			if leftReady && rightReady {
+				taskJSON := map[string]interface{}{
+					"task": map[string]interface{}{
+						"id":             task.ID,
+						"arg1":           getTaskValue(task.LeftID, task.LeftVal),
+						"arg2":           getTaskValue(task.RightID, task.RightVal),
+						"operation":      task.Operator,
+						"operation_time": opTime(task.Operator),
+					},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(taskJSON)
+				task.Sent = true
+				return
+			}
+		}
+	}
+
+	http.Error(w, "No available tasks", http.StatusNotFound)
+}
+
+func HandleRecieveTask(w http.ResponseWriter, r *http.Request) {
+	var resultData struct {
+		ID     int     `json:"id"`
+		Result float64 `json:"result"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&resultData); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusUnprocessableEntity)
+		return
+	}
+
+	processTaskResult(resultData.ID, resultData.Result, w)
+	w.WriteHeader(http.StatusOK)
 }
 
 func getTaskStatus(task *Task) string {
