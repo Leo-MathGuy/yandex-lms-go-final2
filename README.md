@@ -1,6 +1,6 @@
 # Distributed Arithmetic Expression Calculator
 
-[Русский Язык](README.md.ru)
+[Русский Язык](README.ru.md)
 
 ## Description
 
@@ -39,17 +39,40 @@ Env variables for duration and amount of threads are kept in env.env
 
 To send an expression, use the `python3 manualapi.py` file for easy access or `curl` commands below:
 
+#### Sending expressions
+
+```bash
+curl -X POST http://localhost:8080/api/v1/calculate \
+  -H "Content-Type: application/json" \
+  -d '{"expression": "(50 * (2 + 3))   / ((9 - 6) * (3)) + 4"}'
+```
+
+#### GETting expressions
+
+```bash
+curl --location 'localhost:8080/api/v1/expressions'
+```
+
+`> {"expressions":[{"id":8,"result":-424,"status":"completed"}`
+
+#### GETting a particular expression
+
+```bash
+curl --location 'localhost:8080/api/v1/expressions/8'
+```
+
+`> {"expression":{"id":8,"result":-424,"status":"completed"}}`
 
 ## System Architecture
 
 The project consists of two components:
 
 * The agent - The calculator that performs single arithmetic tasks, recieved from the orchestrator
-* The orchestrator - The backend, which recieves API calls and calculates order of operations for the agent, hosts the frontend
+* The orchestrator - The backend, which recieves API calls and calculates order of operations for the agent, hosts the frontend website
 
 ### The Orchestrator
 
-It is the web server. It manages the pages and API calls.
+It is the web server. It manages the pages, API calls, and tasks.
 
 When new expression is recieved, it is processed as follows:
 
@@ -59,13 +82,33 @@ When new expression is recieved, it is processed as follows:
 4. The expression gets transformed into an AST through the Recursive Descent Parser algorithm, separating expreessions, terms, and factors
 5. The AST gets turned into a list of tasks, with a tree of dependencies
 
-Upon the get expressions call, all parent tasks get returned
-vpno
 Upon the /internal/task call, a non-sent, non-ready task is sent to the agent
 
 When the result is recieved, it is marked done and another task is now ready to be sent
 
-All expression IDs are task IDs, but only the parent task IDs are expression IDs. This simplifies the process.
+*All expression IDs are task IDs, but only the parent task IDs are expression IDs.* This simplifies the process.
+
+From the example above, the task with the `"id": 8` is the root of the task tree, which contains the tasks with IDs 0-8.
+
+### Task
+
+A task has the following struct:
+
+```golang
+type Task struct {
+ ID       int      // ID
+ Operator string   // Operator string (if its a value, empty)
+ LeftID   *int     // ID of left leaf or nil
+ RightID  *int     // ID of right leaf or nil
+ LeftVal  *float64
+ RightVal *float64
+ parent   bool     // Whether this is the root of the tree
+ Done     bool     // Whether child tasks are ready
+ Result   *float64 // Result
+ Time     int64    // Time for the operation
+ Sent     bool     // Whether the agent has this task
+}
+```
 
 ## Client API Endpoints
 
@@ -83,7 +126,7 @@ Response:
 
 ```json
 {
-    "id": <unique id of expr>
+    "id": <unique id of parent task>
 }
 ```
 
@@ -95,7 +138,7 @@ Response:
 {
     "expressions": [
         {
-            "id": <unique id of expr>,
+            "id": <unique id of parent task>,
             "status": <status>,
             "result": <result>
         },
