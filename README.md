@@ -70,6 +70,19 @@ The project consists of two components:
 * The agent - The calculator that performs single arithmetic tasks, recieved from the orchestrator
 * The orchestrator - The backend, which recieves API calls and calculates order of operations for the agent, hosts the frontend website
 
+```text
+* - - - - - - - *                 * - - - - - - - *
+|  orchestrator | - tasks (2+2) > |     agent     |
+* - - - - - - - *                 * - - - - - - - *
+        ^
+   expressions
+        |
+* - - - - - - - *
+|      user     |
+* - - - - - - - *
+
+```
+
 ### The Orchestrator
 
 It is the web server. It manages the pages, API calls, and tasks.
