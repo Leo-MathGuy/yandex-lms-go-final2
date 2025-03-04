@@ -68,7 +68,7 @@ curl --location 'localhost:8080/api/v1/expressions/8'
 The project consists of two components:
 
 * The agent - The calculator that performs single arithmetic tasks, recieved from the orchestrator
-* The orchestrator - The backend, which recieves API calls and calculates order of operations for the agent, hosts the frontend website
+* The orchestrator - The backend, which recieves API calls and calculates order of operations for the agent
 
 ```text
 * - - - - - - - *                 * - - - - - - - *
@@ -85,7 +85,7 @@ The project consists of two components:
 
 ### The Orchestrator
 
-It is the web server. It manages the pages, API calls, and tasks.
+It is the web server. It manages the API calls and tasks.
 
 When new expression is recieved, it is processed as follows:
 
