@@ -2,6 +2,8 @@
 
 [Русский Язык](README.ru.md)
 
+Telegram: @neo536
+
 ## Description
 
 A demonstration of a distributed web server, using a web API to perform arithmetic. The agent is the calculator for the website.
@@ -85,7 +87,7 @@ The project consists of two components:
 
 ### The Orchestrator
 
-It is the web server. It manages the API calls and tasks.
+It is the web server. It manages the API callsv and tasks.
 
 When new expression is recieved, it is processed as follows:
 
